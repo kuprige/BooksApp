@@ -28,10 +28,46 @@ render();
 
 // Dodanie nowej pustej tablicy favoriteBooks
 const favoriteBooks = [];
+// Pusta tablica filters na przechowywanie wybranych filtrów
+const filters = [];
+
+function handleFilterClick(event) {
+  const clickedElement = event.target;
+
+  // Sprawdzamy, czy kliknięty element jest checkboxem
+  if (
+    clickedElement.tagName === "INPUT" &&
+    clickedElement.type === "checkbox" &&
+    clickedElement.name === "filter"
+  ) {
+    const filterValue = clickedElement.value;
+
+    // Sprawdzamy, czy checkbox jest zaznaczony
+    if (clickedElement.checked) {
+      // Dodajemy wartość do tablicy filters, jeśli nie ma jej jeszcze w tablicy
+      if (!filters.includes(filterValue)) {
+        filters.push(filterValue);
+      }
+    } else {
+      // Usuwamy wartość z tablicy filters, jeśli jest już w tablicy
+      const index = filters.indexOf(filterValue);
+      if (index !== -1) {
+        filters.splice(index, 1);
+      }
+    }
+
+    // Wyświetlamy tablicę filters w konsoli (tylko do celów testowych)
+    console.log(filters);
+  }
+}
 
 function initActions() {
   // Przygotowanie referencji do listy wszystkich elementów .book__image w liście .books-list
   const booksList = document.querySelector(".books-list");
+  const form = document.querySelector(".filters");
+
+  // Dodanie nasłuchiwacza dla zmiany stanu checkboxa w formularzu
+  form.addEventListener("change", filterBooks);
 
   // Dodanie nasłuchiwacza dla wykrycia kliknięcia na całej liście .books-list
   booksList.addEventListener("click", (event) => {
@@ -57,29 +93,42 @@ function initActions() {
       }
     }
   });
+
+  // Przygotowanie referencji do formularza
+  const filtersForm = document.querySelector(".filters");
+
+  // Dodanie nasłuchiwacza dla wykrycia kliknięcia w formularzu
+  filtersForm.addEventListener("click", handleFilterClick);
 }
-
-// Przygotowanie referencji do listy .books-list
-const booksList = document.querySelector(".books-list");
-
-// Dodanie nasłuchiwacza dla wykrycia kliknięcia w .books-list
-booksList.addEventListener("click", (event) => {
-  // Sprawdzenie, czy kliknięty element ma klasę .book__image
-  if (event.target.classList.contains("book__image")) {
-    event.preventDefault(); // Zatrzymanie domyślnego zachowania przeglądarki
-
-    // Sprawdzenie, czy książka jest już w ulubionych
-    const isFavorite = event.target.classList.contains("favorite");
-
-    if (!isFavorite) {
-      // Książka nie jest w ulubionych - dodanie klasy favorite
-      event.target.classList.add("favorite");
-    } else {
-      // Książka jest już w ulubionych - usunięcie klasy favorite
-      event.target.classList.remove("favorite");
-    }
-  }
-});
 
 // Wywołanie funkcji initActions
 initActions();
+
+// Nowa funkcja do filtrowania książek na podstawie wybranych filtrów
+function filterBooks() {
+  const booksList = document.querySelector(".books-list");
+
+  dataSource.books.forEach((book) => {
+    let shouldBeHidden = false; // Domyślnie ustawione na false dla każdej książki
+
+    for (const filter of filters) {
+      if (!book.details[filter]) {
+        shouldBeHidden = true;
+        break;
+      }
+    }
+
+    const bookImage = booksList.querySelector(
+      `.book__image[data-id="${book.id}"]`
+    );
+
+    if (bookImage) {
+      // Dodanie lub usunięcie klasy 'hidden' tylko jeśli element został znaleziony
+      if (shouldBeHidden) {
+        bookImage.classList.add("hidden");
+      } else {
+        bookImage.classList.remove("hidden");
+      }
+    }
+  });
+}
