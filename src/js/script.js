@@ -95,3 +95,4 @@ class BooksList {
 
 // Utworzenie instancji klasy BooksList
 const app = new BooksList();
+console.log(app);
